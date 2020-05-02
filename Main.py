@@ -9,7 +9,6 @@ import os
 import time
 from Actor import Actor
 from Learner import Learner
-from Test import Test
 from Evaluator import Evaluator
 from Simulation import Simulation
 from Buffer import Replay_buffer
@@ -52,7 +51,7 @@ def built_parser(method):
     parser.add_argument('--num_hidden_cell', type=int, default=256)
 
     '''other setting'''
-    parser.add_argument("--max_train", type=int, default=2000000)
+    parser.add_argument("--max_train", type=int, default=3000000)
     parser.add_argument("--decay_T_max", type=int, default=parser.parse_args().max_train, help='for learning rate annealing')
     parser.add_argument('--load_param_period', type=int, default=20)
     parser.add_argument('--save_model_period', type=int, default=20000)
@@ -60,7 +59,7 @@ def built_parser(method):
     parser.add_argument('--seed', type=int, default=1, help='initial seed (default: 1)')
 
     '''parallel architecture'''
-    parser.add_argument("--num_buffers", type=int, default=4)
+    parser.add_argument("--num_buffers", type=int, default=3)
     parser.add_argument("--num_learners", type=int, default=4) #note that too many learners may cause bad update for shared network
     parser.add_argument("--num_actors", type=int, default=6)
 
@@ -79,6 +78,7 @@ def built_parser(method):
         parser.add_argument("--adaptive_bound", default=False)
         parser.add_argument('--alpha', default="auto", help="auto or some value such as 1")
         parser.add_argument('--TD_bound', type=float, default=20)
+        parser.add_argument('--bound',  default=True)
     elif parser.parse_args().method_name[method] == "SAC":
         parser.add_argument("--distributional_Q", default=False)
         parser.add_argument("--stochastic_actor", default=True)
@@ -100,6 +100,7 @@ def built_parser(method):
         parser.add_argument("--adaptive_bound", default=False)
         parser.add_argument("--policy_smooth", default=True)
         parser.add_argument('--TD_bound', type=float, default=20)
+        parser.add_argument('--bound',  default=True)
     elif parser.parse_args().method_name[method] == "TD3":
         parser.add_argument("--distributional_Q", default=False)
         parser.add_argument("--stochastic_actor", default=False)
@@ -132,10 +133,6 @@ def leaner_agent(args, shared_queue,shared_value,share_net,share_optimizer,devic
     leaner = Learner(args, shared_queue,shared_value,share_net,share_optimizer,device,lock,i)
     leaner.run()
 
-def test_agent(args, shared_value,share_net):
-
-    test = Test(args, shared_value,share_net)
-    test.run()
 
 def evaluate_agent(args, shared_value, share_net):
 
@@ -164,6 +161,10 @@ def main(method):
     args.action_low = action_low.tolist()
     args.seed = np.random.randint(0,30)
     args.init_time = time.time()
+
+    if args.alpha == 'auto' and args.target_entropy == 'auto' :
+        delta_a = np.array(args.action_high, dtype=np.float32)-np.array(args.action_low, dtype=np.float32)
+        args.target_entropy = -1*args.action_dim + sum(np.log(delta_a/2))
 
     Q_net1 = QNet(args)
     Q_net1.train()
@@ -233,7 +234,6 @@ def main(method):
             procs.append(Process(target=actor_agent, args=(args, shared_queue, shared_value,[actor1,Q_net1], lock, i)))
         for i in range(args.num_buffers):
             procs.append(Process(target=buffer, args=(args, shared_queue, shared_value,i)))
-        procs.append(Process(target=test_agent, args=(args, shared_value, [actor1, log_alpha])))
         procs.append(Process(target=evaluate_agent, args=(args, shared_value, share_net)))
         for i in range(args.num_learners):
             #device = torch.device("cuda")

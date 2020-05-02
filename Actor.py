@@ -44,7 +44,8 @@ class Actor():
                 time.sleep(0.5)
                 self.put_data()
             else:
-                self.experience_in_queue[index].put((self.last_state, self.last_u, [self.reward*self.args.reward_scale], self.state, [self.done], self.TD.detach().cpu().numpy().squeeze()))
+                self.experience_in_queue[index].put((self.state, self.u, \
+                   [self.reward*self.args.reward_scale], self.state_next, [self.done], self.TD.detach().cpu().numpy().squeeze()))
         else:
             pass
 
@@ -54,29 +55,17 @@ class Actor():
             while not self.stop_sign.value:
                 self.state = self.env.reset()
                 self.episode_step = 0
-                state_tensor = torch.FloatTensor(self.state.copy()).float().to(self.device)
-                if self.args.NN_type == "CNN":
-                    state_tensor = state_tensor.permute(2, 0, 1)
-                self.u, _ = self.actor.get_action(state_tensor.unsqueeze(0), False)
-                #q_1 = self.Q_net1(state_tensor.unsqueeze(0), torch.FloatTensor(self.u).to(self.device))[0]
-                self.u = self.u.squeeze(0)
-                self.last_state = self.state.copy()
-                self.last_u = self.u.copy()
-                #last_q_1 = q_1
+
                 for i in range(self.args.max_step-1):
-                    self.state, self.reward, self.done, _ = self.env.step(self.u)
-                    state_tensor = torch.FloatTensor(self.state.copy()).float().to(self.device)
+                    state_tensor = torch.FloatTensor(self.state.copy()).to(self.device)
                     if self.args.NN_type == "CNN":
                         state_tensor = state_tensor.permute(2, 0, 1)
-                    self.u, _ = self.actor.get_action(state_tensor.unsqueeze(0), False)
-                    #q_1 = self.Q_net1(state_tensor.unsqueeze(0), torch.FloatTensor(self.u).to(self.device))[0]
+                    self.u, _, _ = self.actor.get_action(state_tensor.unsqueeze(0), False)
                     self.u = self.u.squeeze(0)
-
-                    self.TD = torch.zeros(1) #self.reward + (1 - self.done) * self.args.gamma * q_1 - last_q_1
+                    self.state_next, self.reward, self.done, _ = self.env.step(self.u)
+                    self.TD = torch.zeros(1)
                     self.put_data()
-                    self.last_state = self.state.copy()
-                    self.last_u = self.u.copy()
-                    #last_q_1 = q_1
+                    self.state = self.state_next.copy()
 
                     with self.lock:
                         self.counter.value += 1
