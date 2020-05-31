@@ -10,7 +10,7 @@ from utils import *
 
 
 class Actor():
-    def __init__(self, args, shared_queue, shared_value,share_net, lock, i):
+    def __init__(self, args, shared_queue, shared_value,share_net, lock,  i):
         super(Actor, self).__init__()
         self.agent_id = i
         seed = args.seed + np.int64(self.agent_id)
