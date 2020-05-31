@@ -134,7 +134,7 @@ class Evaluator(object):
         self.alpha = np.exp(self.log_alpha_share.detach().item()) if args.alpha == 'auto' else 0
 
         self.evaluation_interval = 20000
-        self.max_state_num_evaluated_in_an_episode = 500
+        self.max_state_num_evaluated_in_an_episode = 300
         self.episode_num_evaluation = 5
         self.episode_num_test = 5
         self.time = time.time()

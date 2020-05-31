@@ -271,14 +271,14 @@ class PolicyNet(nn.Module):
             log_prob = log_prob.sum(dim=-1, keepdim=True)
             action_mean = torch.mul(self.action_range, torch.tanh(mean)) + self.action_bias
             action = action_mean.detach().cpu().numpy() if deterministic else action.detach().cpu().numpy()
-            return action, log_prob.detach().item(), std.detach().cpu().numpy().squeeze()
+            return action, log_prob.detach().item(), std.detach().cpu().numpy().squeeze(0)
         else:
             action_mean = torch.mul(self.action_range, torch.tanh(mean)) + self.action_bias
             action = action_mean + 0.1 * torch.mul(self.action_range,z)
             action = torch.min(action, self.action_high)
             action = torch.max(action, self.action_low)
             action = action_mean.detach().cpu().numpy() if deterministic else action.detach().cpu().numpy()
-            return action, 0, 0*(log_std.detach().cpu().numpy().squeeze())
+            return action, 0, 0*(log_std.detach().cpu().numpy().squeeze(0))
 
 
 

@@ -31,7 +31,7 @@ def make_a_figure_of_n_runs_for_average_performance(env_name, run_numbers, metho
             average_return_max_best = list(map(lambda x: x[0], average_return_with_diff_base))
             average_return_max_better = list(map(lambda x: x[1], average_return_with_diff_base))
             average_return_max_all = list(map(lambda x: x[2], average_return_with_diff_base))
-            last_number_of_each_method.append(average_return_max_all[-1])
+            last_number_of_each_method.append(average_return_max_better[-1])
 
             alpha = np.load(
                 './' + env_name + '-run' + str(run_idx_) + '/method_' + str(method_idx) + '/result/alpha.npy')
@@ -44,7 +44,7 @@ def make_a_figure_of_n_runs_for_average_performance(env_name, run_numbers, metho
                                                            Algorithms=method_name,
                                                            iteration=(iteration / 10).astype(np.int32) / 100000,
                                                            time=time,
-                                                           average_return=average_return_max_all,
+                                                           average_return=average_return_max_better,
                                                            alpha=alpha))
             df_list.append(df_for_this_run_and_method)
         last_number_of_each_run.append(last_number_of_each_method)
@@ -70,7 +70,7 @@ def make_a_figure_of_n_runs_for_average_performance(env_name, run_numbers, metho
     handles, labels = ax1.get_legend_handles_labels()
     ax1.legend(handles=handles[1:], labels=labels[1:], loc='upper left', frameon=False, fontsize=15)
 
-    ax1.get_legend().remove()
+    #ax1.get_legend().remove()
 
     ax1.set_ylabel('Average Return', fontsize=15)
     ax1.set_xlabel("Million iterations", fontsize=15)
