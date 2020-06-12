@@ -164,7 +164,7 @@ def main(method):
 
     if args.alpha == 'auto' and args.target_entropy == 'auto' :
         delta_a = np.array(args.action_high, dtype=np.float32)-np.array(args.action_low, dtype=np.float32)
-        args.target_entropy = -1*args.action_dim + sum(np.log(delta_a/2))
+        args.target_entropy = -1*args.action_dim #+ sum(np.log(delta_a/2))
 
     Q_net1 = QNet(args)
     Q_net1.train()

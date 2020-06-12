@@ -88,38 +88,6 @@ def make_a_figure_of_n_runs_for_average_performance(env_name, run_numbers, metho
     # plt.show()
 
 
-def transfer_n_episode_history_to_mean(env_name, run_numbers=5, method_numbers=6, max_state=500, init_run=0, init_method=0):
-    init_run = init_run
-    init_method = init_method
-    for run_idx_ in range(init_run, init_run + run_numbers, 1):
-        for method_idx in range(init_method, init_method + method_numbers, 1):
-            n_episodes_info_history = np.load('./' + env_name + '-run' + str(run_idx_) + '/method_' + str(method_idx)
-                                              + '/result/n_episodes_info_history.npy', allow_pickle=True)
-            n_episode_evaluated_Q_list_history = list(
-                map(lambda x: x['n_episode_evaluated_Q_list'], n_episodes_info_history))
-            n_episode_true_gamma_return_list_history = list(
-                map(lambda x: x['n_episode_true_gamma_return_list'], n_episodes_info_history))
-
-            def concat_interest_epi_part_of_one_ite_and_mean(list_of_n_epi):
-                tmp = list(copy.deepcopy(list_of_n_epi))
-                tmp[0] = tmp[0] if len(tmp[0]) <= max_state else tmp[0][:max_state]
-
-                def reduce_fuc(a, b):
-                    return np.concatenate([a, b]) if len(b) < max_state else np.concatenate([a, b[:max_state]])
-
-                interest_epi_part_of_one_ite = reduce(reduce_fuc, tmp)
-                return sum(interest_epi_part_of_one_ite) / len(interest_epi_part_of_one_ite)
-
-            evaluated_Q = list(
-                map(concat_interest_epi_part_of_one_ite_and_mean, n_episode_evaluated_Q_list_history))
-            true_gamma_return = list(
-                map(concat_interest_epi_part_of_one_ite_and_mean, n_episode_true_gamma_return_list_history))
-            np.save('./' + env_name + '-run' + str(run_idx_) + '/method_' + str(method_idx) +
-                    '/result/evaluated_Q_mean', np.array(evaluated_Q))
-            np.save('./' + env_name + '-run' + str(run_idx_) + '/method_' + str(method_idx) +
-                    '/result/true_gamma_return_mean', np.array(true_gamma_return))
-
-
 def make_a_figure_of_n_runs_for_value_estimation(env_name, run_numbers, method_numbers, max_state=500, init_run=0,
                                                  init_method=0):
     # make a total dataframe
@@ -176,7 +144,7 @@ def make_a_figure_of_n_runs_for_value_estimation(env_name, run_numbers, method_n
 
     handles, labels = ax1.get_legend_handles_labels()
     ax1.legend(handles=handles[1:], labels=labels[1:], loc='upper left', frameon=False, fontsize=15)
-    ax1.get_legend().remove()
+    #ax1.get_legend().remove()
     ax1.set_ylabel('Average Q-value', fontsize=15)
     ax1.set_xlabel("Million iterations", fontsize=15)
     #plt.xlim(0, 3)
@@ -198,7 +166,7 @@ def make_a_figure_of_n_runs_for_value_estimation(env_name, run_numbers, method_n
 
     handles, labels = ax2.get_legend_handles_labels()
     ax2.legend(handles=handles[1:], labels=labels[1:], loc='upper left', frameon=False, fontsize=15)
-    ax2.get_legend().remove()
+    #ax2.get_legend().remove()
     ax2.set_ylabel('Average Q-value Estimation Bias', fontsize=15)
     ax2.set_xlabel("Million iterations", fontsize=15)
     #plt.xlim(0, 3)

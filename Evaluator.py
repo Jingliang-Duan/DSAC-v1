@@ -134,8 +134,8 @@ class Evaluator(object):
         self.alpha = np.exp(self.log_alpha_share.detach().item()) if args.alpha == 'auto' else 0
 
         self.evaluation_interval = 20000
-        self.max_state_num_evaluated_in_an_episode = 300
-        self.episode_num_evaluation = 5
+        self.max_state_num_evaluated_in_an_episode = 200
+        self.episode_num_evaluation = 10
         self.episode_num_test = 5
         self.time = time.time()
         self.list_of_n_episode_rewards_history = []
@@ -158,7 +158,7 @@ class Evaluator(object):
         sorted_list = sorted(list_for_average, reverse=True)
         return sum(sorted_list[:n]) / n
 
-    def run_an_episode(self,deterministic):
+    def run_an_episode(self,deterministic,mode):
         #state_list = []
         action_list = []
         log_prob_list = []
@@ -170,7 +170,7 @@ class Evaluator(object):
         state = self.env.reset()
         while not done and len(reward_list) < self.args.max_step:
             state_tensor = torch.FloatTensor(state.copy()).float().to(self.device)
-            u, log_prob, a_std = self.actor.get_action(state_tensor.unsqueeze(0), deterministic)
+            u, log_prob, a_std = self.actor.get_action_test(state_tensor.unsqueeze(0), deterministic)
             #state_list.append(state.copy())
             log_prob_list.append(log_prob)
             a_std_list.append(a_std)
@@ -191,7 +191,7 @@ class Evaluator(object):
             # self.env.render(mode='human')
             action_list.append(u)
             reward_list.append(reward * self.args.reward_scale)
-        if not deterministic:
+        if mode=="Evaluation":
             entropy_list = list(-self.alpha * np.array(log_prob_list))
             true_gamma_return_list = cal_gamma_return_of_an_episode(reward_list, entropy_list, self.args.gamma)
             policy_entropy = -sum(log_prob_list) / len(log_prob_list)
@@ -207,13 +207,13 @@ class Evaluator(object):
                         evaluated_Q_list=np.array(evaluated_Q_list),
                         Q_std_list=np.array(Q_std_list),
                         true_gamma_return_list=true_gamma_return_list,)
-        else:
+        elif mode=="Performance":
             episode_return = sum(reward_list) / self.args.reward_scale
             episode_len = len(reward_list)
             return dict(episode_return=episode_return,
                         episode_len=episode_len)
 
-    def run_n_episodes(self, n, max_state, deterministic):
+    def run_n_episodes(self, n, max_state, deterministic, mode):
         n_episode_state_list = []
         n_episode_action_list = []
         n_episode_log_prob_list = []
@@ -226,22 +226,22 @@ class Evaluator(object):
         n_episode_policyentropy_list=[]
         n_episode_a_std_list=[]
         for _ in range(n):
-            episode_info = self.run_an_episode(deterministic)
+            episode_info = self.run_an_episode(deterministic,mode)
             # n_episode_state_list.append(episode_info['state_list'])
             # n_episode_action_list.append(episode_info['action_list'])
             # n_episode_log_prob_list.append(episode_info['log_prob_list'])
             #n_episode_reward_list.append(episode_info['reward_list'])
-            if not deterministic:
+            if mode == "Evaluation":
                 n_episode_evaluated_Q_list.append(episode_info['evaluated_Q_list'])
                 n_episode_Q_std_list.append(episode_info['Q_std_list'])
                 n_episode_true_gamma_return_list.append(episode_info['true_gamma_return_list'])
                 n_episode_policyentropy_list.append(episode_info['policy_entropy'])
                 n_episode_a_std_list.append(episode_info['a_std_mean'])
                 n_episode_action_list.append(episode_info['a_abs_mean'])
-            else:
+            elif mode == "Performance":
                 n_episode_return_list.append(episode_info['episode_return'])
                 n_episode_len_list.append(episode_info['episode_len'])
-        if not deterministic:
+        if mode == "Evaluation":
             average_policy_entropy= sum(n_episode_policyentropy_list) / len(n_episode_policyentropy_list)
             average_a_std=np.mean(np.array(n_episode_a_std_list), axis=0)
             average_a_abs = np.mean(np.array(n_episode_action_list), axis=0)
@@ -270,7 +270,7 @@ class Evaluator(object):
                         policy_entropy=average_policy_entropy,
                         a_std=average_a_std,
                         a_abs=average_a_abs)
-        else:
+        elif mode=="Performance":
             average_return_with_diff_base = np.array([self.average_max_n(n_episode_return_list, x) for x in
                                                       [1, self.episode_num_test - 2, self.episode_num_test]])
             average_reward = sum(n_episode_return_list) / sum(n_episode_len_list)
@@ -289,7 +289,10 @@ class Evaluator(object):
 
                 delta_time = time.time() - self.time
                 self.time = time.time()
-                n_episode_info = self.run_n_episodes(self.episode_num_evaluation, self.max_state_num_evaluated_in_an_episode, False)
+                if self.args.stochastic_actor:
+                    n_episode_info = self.run_n_episodes(self.episode_num_evaluation,self.max_state_num_evaluated_in_an_episode, False, mode="Evaluation")
+                else:
+                    n_episode_info = self.run_n_episodes(self.episode_num_evaluation,self.max_state_num_evaluated_in_an_episode, True, mode="Evaluation")
                 self.iteration_history.append(self.iteration)
                 self.evaluated_Q_mean_history.append(n_episode_info['evaluated_Q_mean'])
                 self.evaluated_Q_std_history.append(n_episode_info['evaluated_Q_std'])
@@ -300,7 +303,7 @@ class Evaluator(object):
                 self.policy_entropy_history.append(n_episode_info['policy_entropy'])
                 self.a_std_history.append(n_episode_info['a_std'])
                 self.a_abs_history.append(n_episode_info['a_abs'])
-                n_episode_info_test = self.run_n_episodes(self.episode_num_test, self.max_state_num_evaluated_in_an_episode, True)
+                n_episode_info_test = self.run_n_episodes(self.episode_num_test, self.max_state_num_evaluated_in_an_episode, True, mode="Performance")
                 self.average_return_with_diff_base_history.append(n_episode_info_test['average_return_with_diff_base'])
                 self.average_reward_history.append(n_episode_info_test['average_reward'])
 

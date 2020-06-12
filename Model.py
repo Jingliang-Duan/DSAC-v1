@@ -280,7 +280,28 @@ class PolicyNet(nn.Module):
             action = action_mean.detach().cpu().numpy() if deterministic else action.detach().cpu().numpy()
             return action, 0, 0*(log_std.detach().cpu().numpy().squeeze(0))
 
-
+    def get_action_test(self, state, deterministic, epsilon=1e-4):
+        mean, log_std = self.forward(state)
+        normal = Normal(torch.zeros(mean.shape), torch.ones(log_std.shape))
+        z = normal.sample()
+        if self.args.stochastic_actor:
+            z = torch.clamp(z, -3, 3)
+            std = log_std.exp()
+            action_0 = mean + torch.mul(z, std)
+            action_1 = torch.tanh(action_0)
+            action = torch.mul(self.action_range, action_1) + self.action_bias
+            log_prob = Normal(mean, std).log_prob(action_0)-torch.log(1. - action_1.pow(2) + epsilon) - torch.log(self.action_range)
+            log_prob = log_prob.sum(dim=-1, keepdim=True)
+            action_mean = torch.mul(self.action_range, torch.tanh(mean)) + self.action_bias
+            action = action_mean.detach().cpu().numpy() if deterministic else action.detach().cpu().numpy()
+            return action, log_prob.detach().item(), std.detach().cpu().numpy().squeeze(0)
+        else:
+            action_mean = torch.mul(self.action_range, torch.tanh(mean)) + self.action_bias
+            action = action_mean + 0.1 * torch.mul(self.action_range,z)
+            action = torch.min(action, self.action_high)
+            action = torch.max(action, self.action_low)
+            action = action_mean.detach().cpu().numpy() if deterministic else action.detach().cpu().numpy()
+            return action, 0, 0*(log_std.detach().cpu().numpy().squeeze(0))
 
 
 class ValueNet(nn.Module):
