@@ -170,6 +170,8 @@ class Evaluator(object):
         state = self.env.reset()
         while not done and len(reward_list) < self.args.max_step:
             state_tensor = torch.FloatTensor(state.copy()).float().to(self.device)
+            if self.args.NN_type == "CNN":
+                state_tensor = state_tensor.permute(2, 0, 1)
             u, log_prob, a_std = self.actor.get_action_test(state_tensor.unsqueeze(0), deterministic)
             #state_list.append(state.copy())
             log_prob_list.append(log_prob)

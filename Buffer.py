@@ -4,7 +4,7 @@ import numpy as np
 import torch.multiprocessing as mp
 from torch.multiprocessing import Process, Queue
 import time
-from Model import QNet, ValueNet, PolicyNet
+
 from utils import *
 import torch.nn as nn
 from torch.distributions import Normal
@@ -31,11 +31,11 @@ class Replay_buffer():
     def push(self, data):
         if len(self.storage) == self.args.buffer_size_max:
             self.storage[int(self.ptr)] = data[0:-1]
-            self.priority_buffer[int(self.ptr)] = data[-1]
+            #self.priority_buffer[int(self.ptr)] = data[-1]
             self.ptr = (self.ptr + 1) % self.args.buffer_size_max
         else:
             self.storage.append(data[0:-1])
-            self.priority_buffer.append(data[-1])
+            #self.priority_buffer.append(data[-1])
 
     #self.experience_queue.put((self.counter.value, last_state, u, reward, state, micro_step, done))
     def sample(self, batch_size, epsilon = 1e-6):

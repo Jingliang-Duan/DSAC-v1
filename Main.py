@@ -179,8 +179,7 @@ def main(method):
     Q_net2_target.train()
     Q_net2_target.share_memory()
     actor1 = PolicyNet(args)
-    if args.code_model == "eval":
-        actor1.load_state_dict(torch.load('./' + args.env_name + '/method_' + str(args.method) + '/model/policy_' + str(args.max_train) + '.pkl'))
+
     actor1.train()
     actor1.share_memory()
     actor1_target = PolicyNet(args)

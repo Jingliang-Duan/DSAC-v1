@@ -30,8 +30,7 @@ class Actor():
         self.actor = PolicyNet(args).to(self.device)
         self.Q_net1 = QNet(args).to(self.device)
 
-        #share_net = [Q_net1,Q_net1_target,Q_net2,Q_net2_target,actor,actor_target,log_alpha]
-        #share_optimizer=[Q_net1_optimizer,Q_net2_optimizer,actor_optimizer,alpha_optimizer]
+
         self.Q_net1_share = share_net[1]
         self.actor_share = share_net[0]
 
