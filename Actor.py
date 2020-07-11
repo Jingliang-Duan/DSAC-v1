@@ -69,14 +69,16 @@ class Actor():
                     with self.lock:
                         self.counter.value += 1
 
-                    if self.done == True:
-                        break
-
                     if step%self.args.load_param_period == 0:
                         #self.Q_net1.load_state_dict(self.Q_net1_share.state_dict())
                         self.actor.load_state_dict(self.actor_share.state_dict())
                     step += 1
                     self.episode_step += 1
+
+                    if self.done == True:
+                        break
+
+
 
 def test():
     def xxxx():
