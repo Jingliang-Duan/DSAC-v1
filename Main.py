@@ -77,7 +77,7 @@ def built_parser(method):
         parser.add_argument("--double_actor", default=False)
         parser.add_argument("--adaptive_bound", default=False)
         parser.add_argument('--alpha', default="auto", help="auto or some value such as 1")
-        parser.add_argument('--TD_bound', type=float, default=20)
+        parser.add_argument('--TD_bound', type=float, default=10)
         parser.add_argument('--bound',  default=True)
     elif parser.parse_args().method_name[method] == "SAC":
         parser.add_argument("--distributional_Q", default=False)
@@ -99,7 +99,7 @@ def built_parser(method):
         parser.add_argument('--alpha', default=0, help="auto or some value such as 1")
         parser.add_argument("--adaptive_bound", default=False)
         parser.add_argument("--policy_smooth", default=True)
-        parser.add_argument('--TD_bound', type=float, default=20)
+        parser.add_argument('--TD_bound', type=float, default=10)
         parser.add_argument('--bound',  default=True)
     elif parser.parse_args().method_name[method] == "TD3":
         parser.add_argument("--distributional_Q", default=False)
