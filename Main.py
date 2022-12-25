@@ -15,6 +15,7 @@ from Buffer import Replay_buffer
 from Model import QNet, PolicyNet
 import my_optim
 import gym
+import platform
 
 def built_parser(method):
     parser = argparse.ArgumentParser()
@@ -248,11 +249,17 @@ def main(method):
 
 if __name__ == '__main__':
     #os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-    os.environ["OMP_NUM_THREADS"] = "1"
+    #os.environ["OMP_NUM_THREADS"] = "1"
     #os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
+    plat = platform.system().lower()
+    if plat == 'linux':
+        mp.set_start_method("fork")
+
+    torch.set_num_threads(1)
     for i in range(0,7,1):
         main(i)
+
 
 
 
