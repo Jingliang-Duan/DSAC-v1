@@ -1,5 +1,8 @@
 # Distributional Soft Actor Critic Algorithm
 
+
+We have released version 2.0 of the DSAC algorithm. We recommend using this version. The link is provided below: https://github.com/Jingliang-Duan/Distributional-Soft-Actor-Critic-2.0
+
 This repository contains the DSAC algorithm using pytorch, see details in our paper
 
 1) Jingliang Duan, Ynag Guan, Shengbo Eben Li, et al. Distributional Soft Actor-critic: Off-policy Reinforcement Learning for Addressing Value Estimation Errors. IEEE Transactions on Neural Networks and Learning Systems, 2021. 
