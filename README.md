@@ -1,7 +1,7 @@
 # Distributional Soft Actor Critic Algorithm
 
 
-We have released version 2.0 of the DSAC algorithm. We recommend using this version. The link is provided below: https://github.com/Jingliang-Duan/Distributional-Soft-Actor-Critic-2.0
+We have released version 2.0 of the DSAC algorithm. We recommend using this version. The link is provided below: https://github.com/Jingliang-Duan/DSAC-T
 
 This repository contains the DSAC algorithm using pytorch, see details in our paper
 
